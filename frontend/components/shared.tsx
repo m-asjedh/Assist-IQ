@@ -9,7 +9,7 @@ import { Progress } from "@/components/ui/progress";
 
 export const cardClass = "bg-white rounded-2xl border border-slate-100 shadow-sm gap-0 py-0";
 export const primaryBtnClass =
-  "gradient-bg text-white hover:opacity-90 border-transparent shadow-sm shadow-indigo-200 font-semibold rounded-xl h-auto";
+  "gradient-bg text-white hover:opacity-90 border-transparent shadow-sm shadow-cyan-500/20 font-semibold rounded-xl h-auto";
 
 const badgeStyles: Record<string, string> = {
   default: "bg-slate-100 text-slate-700 border-transparent",

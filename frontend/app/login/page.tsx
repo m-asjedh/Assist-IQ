@@ -3,6 +3,8 @@ import { useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Bot, Eye, EyeOff, Mail, Lock } from "lucide-react";
+import Noise from "@/components/Noise";
+import GridBackground from "@/components/GridBackground";
 
 export default function LoginPage() {
   const [showPw, setShowPw] = useState(false);
@@ -10,8 +12,10 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-slate-50 flex">
       {/* Left panel */}
-      <div className="hidden lg:flex w-1/2 gradient-bg flex-col justify-between p-12 relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_70%,rgba(255,255,255,0.12),transparent_60%)]" />
+      <div className="hidden lg:flex w-1/2 hero-gradient flex-col justify-between p-12 relative overflow-hidden">
+        <GridBackground />
+        <Noise opacity={0.06} />
+        <div className="absolute top-1/3 right-1/4 w-72 h-72 bg-cyan-500/15 mesh-orb" />
         <Link href="/" className="flex items-center gap-2 relative z-10">
           <div className="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center">
             <Bot className="w-5 h-5 text-white" />
@@ -22,7 +26,7 @@ export default function LoginPage() {
           <h2 className="text-3xl font-extrabold text-white mb-4 leading-snug">
             Your AI support team,<br />working 24/7
           </h2>
-          <p className="text-indigo-200 mb-8 leading-relaxed">
+          <p className="text-zinc-400 mb-8 leading-relaxed">
             Upload your documents once. Your chatbot handles customer questions forever.
           </p>
           <div className="space-y-4">
@@ -38,7 +42,7 @@ export default function LoginPage() {
             ))}
           </div>
         </div>
-        <p className="text-indigo-300 text-sm relative z-10">© 2025 SupportMind AI</p>
+        <p className="text-zinc-600 text-sm relative z-10">© 2025 SupportMind AI</p>
       </div>
 
       {/* Right panel */}
