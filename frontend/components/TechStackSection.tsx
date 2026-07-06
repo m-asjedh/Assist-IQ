@@ -80,7 +80,7 @@ export default function TechStackSection() {
             <span className="gradient-text">modern tools</span>
           </motion.h2>
           <motion.p variants={headerItem} className="text-zinc-500 mt-4 text-sm sm:text-base max-w-lg mx-auto">
-            Hover each panel to explore the frontend, backend, AI, and UI layers behind SupportMind.
+            Hover each panel to explore the frontend, backend, AI, and UI layers behind Assist IQ.
           </motion.p>
         </motion.div>
 

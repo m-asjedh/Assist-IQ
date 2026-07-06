@@ -7,12 +7,13 @@ import {
   ArrowRight, Sparkles, Brain, Code2,
 
 } from "lucide-react";
-import Navbar from "@/components/Navbar";
+import SiteMenu from "@/components/staggeredmenu/SiteMenu";
 import Footer from "@/components/Footer";
 import Noise from "@/components/Noise";
 import GridBackground from "@/components/GridBackground";
 import Hero from "@/components/Hero";
 import TechStackSection from "@/components/TechStackSection";
+import ModelViewerSection from "@/components/ModelViewerSection";
 import { testimonials, faqs } from "@/lib/data";
 
 const fadeUp = {
@@ -42,11 +43,13 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-[#fafaf9]">
-      <Navbar />
+      <SiteMenu />
 
       <Hero />
 
       <TechStackSection />
+
+      <ModelViewerSection />
 
       {/* ─── FEATURES BENTO ─── */}
       <section id="features" className="py-28 relative">
@@ -208,7 +211,7 @@ export default function LandingPage() {
               Ready to automate support?
             </motion.h2>
             <motion.p variants={fadeUp} className="text-zinc-400 text-lg mb-10 max-w-lg mx-auto">
-              Join hundreds of businesses using SupportMind AI. Free forever, setup in minutes.
+              Join hundreds of businesses using Assist IQ. Free forever, setup in minutes.
             </motion.p>
             <motion.div variants={fadeUp} className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
