@@ -1,158 +1,167 @@
 "use client";
-import { useState } from "react";
-import { motion } from "framer-motion";
-import { Search, Filter, MessageSquare, Clock, Send, Bot } from "lucide-react";
-import { Card } from "@/components/ui/card";
-import { StatusBadge, SectionHeader, InitialsAvatar, AppBadge, cardClass } from "@/components/shared";
-import { conversations } from "@/lib/data";
 
-const sampleThread = [
-  { role: "bot", text: "Hi! How can I help you today?" },
-  { role: "user", text: "How do I reset my password?" },
-  { role: "bot", text: "Sure! Go to Settings → Security → Change Password. You'll receive a reset email within a minute." },
-  { role: "user", text: "Got it, thank you!" },
-  { role: "bot", text: "You're welcome! Is there anything else I can help with?" },
+import React, { useState } from "react";
+import { Search } from "lucide-react";
+import {
+  Panel,
+  SectionHeader,
+  Badge,
+  ChatBubble,
+} from "@/src/components/dashboard/primitives";
+
+type Convo = {
+  name: string;
+  last: string;
+  time: string;
+  status: string;
+  color: string;
+  thread: { from: "bot" | "user"; text: string }[];
+};
+
+const conversations: Convo[] = [
+  {
+    name: "Sarah Malik",
+    last: "How do I request a refund?",
+    time: "2m ago",
+    status: "Resolved",
+    color: "green",
+    thread: [
+      { from: "user", text: "How do I request a refund?" },
+      { from: "bot", text: "You can request a refund within 30 days from your billing page. Want the link?" },
+      { from: "user", text: "Yes please!" },
+      { from: "bot", text: "Here you go: /dashboard/billing. Anything else?" },
+    ],
+  },
+  {
+    name: "David Chen",
+    last: "Widget not loading on Safari",
+    time: "18m ago",
+    status: "Open",
+    color: "orange",
+    thread: [
+      { from: "user", text: "The widget won't load on Safari." },
+      { from: "bot", text: "Sorry about that! Are you on the latest Safari version? Try clearing cache first." },
+    ],
+  },
+  {
+    name: "Amara Okoye",
+    last: "Can I export my chat history?",
+    time: "1h ago",
+    status: "Waiting",
+    color: "blue",
+    thread: [
+      { from: "user", text: "Can I export my chat history?" },
+      { from: "bot", text: "Yes — head to Conversations and hit export. Want me to walk you through it?" },
+    ],
+  },
+  {
+    name: "Liam Wright",
+    last: "Pricing for 5 seats?",
+    time: "3h ago",
+    status: "Resolved",
+    color: "green",
+    thread: [
+      { from: "user", text: "What's pricing for 5 seats?" },
+      { from: "bot", text: "Assist IQ is free for teams! Every plan is included at no cost." },
+    ],
+  },
 ];
 
-export default function ConversationsPage() {
-  const [selected, setSelected] = useState(conversations[0]);
-  const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState("all");
+const filters = ["All", "Resolved", "Open", "Waiting"];
 
-  const filtered = conversations.filter((c) => {
-    const matchSearch = c.customer.toLowerCase().includes(search.toLowerCase()) || c.lastMessage.toLowerCase().includes(search.toLowerCase());
-    const matchFilter = filter === "all" || c.status === filter;
-    return matchSearch && matchFilter;
-  });
+export default function ConversationsPage() {
+  const [active, setActive] = useState(0);
+  const [filter, setFilter] = useState("All");
+
+  const list =
+    filter === "All"
+      ? conversations
+      : conversations.filter((c) => c.status === filter);
+  const current = conversations[active];
 
   return (
-    <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
-      <SectionHeader title="Conversations" description="View and manage all customer conversations." />
+    <div className="max-w-7xl mx-auto">
+      <SectionHeader
+        title="Conversations"
+        subtitle="Every chat your bot has handled."
+      />
 
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 h-[calc(100vh-180px)]">
-        {/* Conversation List */}
-        <div className="lg:col-span-2 flex flex-col">
-          <Card className={`${cardClass} flex flex-col h-full overflow-hidden`}>
-            {/* Search & Filter */}
-            <div className="p-3 border-b border-slate-100 space-y-2">
-              <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
-                <Search className="w-4 h-4 text-slate-400" />
-                <input
-                  type="text"
-                  placeholder="Search conversations..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="bg-transparent text-sm outline-none flex-1 text-slate-700 placeholder-slate-400"
-                />
-              </div>
-              <div className="flex gap-1.5">
-                {["all", "open", "waiting", "resolved"].map((f) => (
-                  <button
-                    key={f}
-                    onClick={() => setFilter(f)}
-                    className={`px-2.5 py-1 rounded-lg text-xs font-medium capitalize transition-all ${
-                      filter === f ? "gradient-bg text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                    }`}
-                  >
-                    {f}
-                  </button>
-                ))}
-              </div>
-            </div>
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+        <Panel className="lg:col-span-2 p-4 h-fit">
+          <div className="flex items-center gap-2 border-4 border-black rounded-full px-4 py-2 bg-neutral-50 mb-4">
+            <Search size={16} />
+            <input
+              placeholder="Search chats..."
+              className="bg-transparent outline-none font-bold text-sm w-full placeholder:text-black/40"
+            />
+          </div>
 
-            {/* List */}
-            <div className="flex-1 overflow-y-auto divide-y divide-slate-50">
-              {filtered.map((conv) => (
+          <div className="flex flex-wrap gap-2 mb-4">
+            {filters.map((f) => (
+              <button
+                key={f}
+                onClick={() => setFilter(f)}
+                className={`border-2 border-black rounded-full px-3 py-1 text-xs font-black uppercase transition-colors ${
+                  filter === f ? "bg-[#ccff00]" : "bg-white hover:bg-neutral-100"
+                }`}
+              >
+                {f}
+              </button>
+            ))}
+          </div>
+
+          <div className="space-y-2">
+            {list.map((c) => {
+              const idx = conversations.indexOf(c);
+              return (
                 <button
-                  key={conv.id}
-                  onClick={() => setSelected(conv)}
-                  className={`w-full text-left px-4 py-3.5 hover:bg-slate-50 transition-colors ${selected.id === conv.id ? "bg-indigo-50 border-l-2 border-indigo-600" : ""}`}
+                  key={c.name}
+                  onClick={() => setActive(idx)}
+                  className={`w-full text-left border-4 rounded-xl p-3 transition-all ${
+                    idx === active
+                      ? "border-black bg-[#ccff00] shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
+                      : "border-black/20 hover:border-black bg-white"
+                  }`}
                 >
-                  <div className="flex items-start gap-3">
-                    <InitialsAvatar initials={conv.avatar} size="sm" />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-2 mb-0.5">
-                        <p className="text-sm font-semibold text-slate-900 truncate">{conv.customer}</p>
-                        <span className="text-xs text-slate-400 flex-shrink-0">{conv.time}</span>
-                      </div>
-                      <p className="text-xs text-slate-500 truncate mb-1.5">{conv.lastMessage}</p>
-                      <div className="flex items-center gap-2">
-                        <StatusBadge status={conv.status} />
-                        <span className="text-xs text-slate-400">{conv.messages} msgs</span>
-                      </div>
-                    </div>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="font-black text-sm">{c.name}</span>
+                    <span className="text-xs font-bold text-black/40">
+                      {c.time}
+                    </span>
                   </div>
+                  <div className="text-xs font-bold text-black/60 truncate mb-2">
+                    {c.last}
+                  </div>
+                  <Badge color={c.color}>{c.status}</Badge>
                 </button>
-              ))}
-              {filtered.length === 0 && (
-                <div className="flex flex-col items-center justify-center py-12 text-center">
-                  <MessageSquare className="w-8 h-8 text-slate-300 mb-2" />
-                  <p className="text-sm text-slate-500">No conversations found</p>
-                </div>
-              )}
-            </div>
-          </Card>
-        </div>
+              );
+            })}
+          </div>
+        </Panel>
 
-        {/* Conversation Detail */}
-        <div className="lg:col-span-3 flex flex-col">
-          <Card className={`${cardClass} flex flex-col h-full overflow-hidden`}>
-            {/* Header */}
-            <div className="flex items-center gap-3 px-5 py-4 border-b border-slate-100">
-              <InitialsAvatar initials={selected.avatar} />
-              <div className="flex-1">
-                <p className="text-sm font-semibold text-slate-900">{selected.customer}</p>
-                <div className="flex items-center gap-2 mt-0.5">
-                  <StatusBadge status={selected.status} />
-                  <span className="text-xs text-slate-400 flex items-center gap-1">
-                    <Clock className="w-3 h-3" /> {selected.time}
-                  </span>
+        <Panel className="lg:col-span-3 flex flex-col h-[600px]">
+          <div className="flex items-center justify-between px-6 py-4 border-b-4 border-black">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-black rounded-full" />
+              <div>
+                <div className="font-black">{current.name}</div>
+                <div className="text-xs font-bold text-black/50">
+                  {current.time}
                 </div>
               </div>
-              <AppBadge variant="info">{selected.messages} messages</AppBadge>
             </div>
+            <Badge color={current.color}>{current.status}</Badge>
+          </div>
 
-            {/* Thread */}
-            <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3 bg-slate-50">
-              {sampleThread.map((msg, i) => (
-                <div key={i} className={`flex gap-2 ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-                  {msg.role === "bot" && (
-                    <div className="w-7 h-7 rounded-full gradient-bg flex items-center justify-center text-white flex-shrink-0 mt-0.5">
-                      <Bot className="w-3.5 h-3.5" />
-                    </div>
-                  )}
-                  <div
-                    className={`max-w-xs sm:max-w-sm px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
-                      msg.role === "user"
-                        ? "gradient-bg text-white rounded-br-sm"
-                        : "bg-white text-slate-800 rounded-bl-sm shadow-sm"
-                    }`}
-                  >
-                    {msg.text}
-                  </div>
-                  {msg.role === "user" && (
-                    <InitialsAvatar initials={selected.avatar} size="sm" />
-                  )}
-                </div>
-              ))}
-            </div>
-
-            {/* Reply box */}
-            <div className="px-4 pb-4 pt-3 border-t border-slate-100">
-              <div className="flex gap-2 bg-slate-50 border border-slate-200 rounded-xl p-1.5">
-                <input
-                  type="text"
-                  placeholder="Add a note or reply..."
-                  className="flex-1 px-2 py-1 text-sm outline-none bg-transparent text-slate-700 placeholder-slate-400"
-                />
-                <button className="w-8 h-8 gradient-bg rounded-lg flex items-center justify-center text-white hover:opacity-90 transition-opacity">
-                  <Send className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            </div>
-          </Card>
-        </div>
+          <div className="flex-1 overflow-y-auto p-6 space-y-4">
+            {current.thread.map((m, i) => (
+              <ChatBubble key={i} from={m.from}>
+                {m.text}
+              </ChatBubble>
+            ))}
+          </div>
+        </Panel>
       </div>
-    </motion.div>
+    </div>
   );
 }

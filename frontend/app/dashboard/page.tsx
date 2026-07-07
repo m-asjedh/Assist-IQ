@@ -1,129 +1,156 @@
 "use client";
-import { motion } from "framer-motion";
-import { MessageSquare, FileText, Bot, BarChart3, ArrowUpRight, ExternalLink, Plus } from "lucide-react";
+
+import React from "react";
 import Link from "next/link";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { StatCard, StatusBadge, SectionHeader, InitialsAvatar, cardClass, primaryBtnClass } from "@/components/shared";
-import { recentConversations } from "@/lib/data";
+import {
+  MessagesSquare,
+  FileText,
+  Activity,
+  Gauge,
+  Upload,
+  Bot,
+  Code2,
+  ArrowUpRight,
+} from "lucide-react";
+import {
+  StatCard,
+  Panel,
+  SectionHeader,
+  Table,
+  Tr,
+  Td,
+  Badge,
+} from "@/src/components/dashboard/primitives";
 
-const fadeUp = { hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0, transition: { duration: 0.4 } } };
-const stagger = { visible: { transition: { staggerChildren: 0.08 } } };
+const usage = [
+  { day: "Mon", value: 62 },
+  { day: "Tue", value: 78 },
+  { day: "Wed", value: 45 },
+  { day: "Thu", value: 90 },
+  { day: "Fri", value: 70 },
+  { day: "Sat", value: 38 },
+  { day: "Sun", value: 55 },
+];
 
-const stats = [
-  { label: "Total Conversations", value: "12,847", change: "+18% this month", icon: <MessageSquare className="w-5 h-5 text-indigo-600" />, gradient: "bg-indigo-50" },
-  { label: "Documents Uploaded", value: "34", change: "+3 this week", icon: <FileText className="w-5 h-5 text-violet-600" />, gradient: "bg-violet-50" },
-  { label: "Chatbot Status", value: "Active", change: "🟢 Online now", icon: <Bot className="w-5 h-5 text-emerald-600" />, gradient: "bg-emerald-50" },
-  { label: "Monthly Usage", value: "8,240", change: "Conversations this month", icon: <BarChart3 className="w-5 h-5 text-cyan-600" />, gradient: "bg-cyan-50" },
+const barColors = [
+  "bg-purple-400",
+  "bg-blue-400",
+  "bg-orange-400",
+  "bg-[#ccff00]",
+  "bg-pink-400",
+  "bg-purple-400",
+  "bg-blue-400",
+];
+
+const recent = [
+  { name: "Sarah Malik", msg: "How do I request a refund?", time: "2m ago", status: "Resolved", color: "green" },
+  { name: "David Chen", msg: "Widget not loading on Safari", time: "18m ago", status: "Open", color: "orange" },
+  { name: "Amara Okoye", msg: "Can I export my chat history?", time: "1h ago", status: "Waiting", color: "blue" },
+  { name: "Liam Wright", msg: "Pricing for 5 seats?", time: "3h ago", status: "Resolved", color: "green" },
 ];
 
 const quickActions = [
-  { label: "Upload Document", href: "/dashboard/knowledge-base", icon: FileText, color: "text-indigo-600 bg-indigo-50" },
-  { label: "Test Chatbot", href: "/dashboard/chatbot", icon: Bot, color: "text-violet-600 bg-violet-50" },
-  { label: "View Analytics", href: "/dashboard/analytics", icon: BarChart3, color: "text-cyan-600 bg-cyan-50" },
-  { label: "Get Embed Code", href: "/dashboard/widget-setup", icon: ExternalLink, color: "text-emerald-600 bg-emerald-50" },
+  { label: "Upload Docs", desc: "Add to knowledge base", href: "/dashboard/knowledge-base", icon: Upload, color: "bg-purple-400" },
+  { label: "Test Chatbot", desc: "Open the playground", href: "/dashboard/chatbot", icon: Bot, color: "bg-[#ccff00]" },
+  { label: "Get Widget", desc: "Install on your site", href: "/dashboard/widget-setup", icon: Code2, color: "bg-orange-400" },
 ];
-
-const chartBars = [40, 65, 50, 80, 60, 90, 75, 95, 70, 85, 60, 100];
 
 export default function DashboardPage() {
   return (
-    <motion.div initial="hidden" animate="visible" variants={stagger}>
-      <motion.div variants={fadeUp}>
-        <SectionHeader
-          title="Dashboard"
-          description="Welcome back, John. Here's what's happening today."
-          action={
-            <Link href="/dashboard/knowledge-base">
-              <Button className={primaryBtnClass}><Plus className="w-4 h-4" /> Upload Doc</Button>
-            </Link>
-          }
-        />
-      </motion.div>
+    <div className="max-w-7xl mx-auto">
+      <SectionHeader
+        title="Dashboard"
+        subtitle="Welcome back, Jane. Here's what's happening."
+      />
 
-      {/* Stats */}
-      <motion.div variants={stagger} className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
-        {stats.map((s) => (
-          <motion.div key={s.label} variants={fadeUp}>
-            <StatCard {...s} />
-          </motion.div>
-        ))}
-      </motion.div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        {/* Usage Chart */}
-        <motion.div variants={fadeUp} className="lg:col-span-2">
-          <Card className={`${cardClass} p-5 h-full`}>
-            <div className="flex items-center justify-between mb-5">
-              <div>
-                <h3 className="font-semibold text-slate-900">Conversation Volume</h3>
-                <p className="text-xs text-slate-400">Last 12 months</p>
-              </div>
-              <span className="text-xs bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-full font-medium">↑ 18%</span>
-            </div>
-            <div className="flex items-end gap-1.5 h-36">
-              {chartBars.map((h, i) => (
-                <div key={i} className="flex-1 flex flex-col items-center gap-1">
-                  <div
-                    className="w-full gradient-bg rounded-t-md opacity-80 hover:opacity-100 transition-opacity"
-                    style={{ height: `${h}%` }}
-                    title={`Month ${i + 1}`}
-                  />
-                </div>
-              ))}
-            </div>
-            <div className="flex justify-between mt-2">
-              {["Jul", "Aug", "Sep", "Oct", "Nov", "Dec", "Jan", "Feb", "Mar", "Apr", "May", "Jun"].map((m) => (
-                <span key={m} className="text-xs text-slate-400 flex-1 text-center">{m}</span>
-              ))}
-            </div>
-          </Card>
-        </motion.div>
-
-        {/* Quick Actions */}
-        <motion.div variants={fadeUp}>
-          <Card className={`${cardClass} p-5 h-full`}>
-            <h3 className="font-semibold text-slate-900 mb-4">Quick Actions</h3>
-            <div className="grid grid-cols-2 gap-3">
-              {quickActions.map(({ label, href, icon: Icon, color }) => (
-                <Link key={label} href={href} className="flex flex-col items-center gap-2 p-3 rounded-xl border border-slate-100 hover:border-indigo-200 hover:bg-indigo-50/30 transition-all group">
-                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${color}`}>
-                    <Icon className="w-4 h-4" />
-                  </div>
-                  <span className="text-xs font-medium text-slate-700 text-center leading-tight">{label}</span>
-                </Link>
-              ))}
-            </div>
-          </Card>
-        </motion.div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 mb-10">
+        <StatCard label="Total Conversations" value="12,480" delta="+8.2% this week" icon={MessagesSquare} />
+        <StatCard label="Documents Uploaded" value="34" delta="4 added today" icon={FileText} color="bg-purple-400" />
+        <StatCard label="Chatbot Status" value="Live" delta="99.9% uptime" icon={Activity} color="bg-[#ccff00]" />
+        <StatCard label="Monthly Usage" value="8,240" delta="of 10,000 msgs" icon={Gauge} color="bg-orange-400" />
       </div>
 
-      {/* Recent Conversations */}
-      <motion.div variants={fadeUp}>
-        <Card className={cardClass}>
-          <div className="flex items-center justify-between px-5 py-4 border-b border-slate-50">
-            <h3 className="font-semibold text-slate-900">Recent Conversations</h3>
-            <Link href="/dashboard/conversations" className="text-xs text-indigo-600 hover:underline flex items-center gap-1">
-              View all <ArrowUpRight className="w-3 h-3" />
-            </Link>
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-10">
+        <Panel className="xl:col-span-2 p-6">
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-2xl font-black uppercase tracking-tight">
+              Conversation Volume
+            </h2>
+            <Badge color="green">Last 7 Days</Badge>
           </div>
-          <div className="divide-y divide-slate-50">
-            {recentConversations.map((conv) => (
-              <div key={conv.id} className="flex items-center gap-4 px-5 py-3.5 hover:bg-slate-50 transition-colors">
-                <InitialsAvatar initials={conv.customer.split(" ").map((n) => n[0]).join("")} size="sm" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-slate-900">{conv.customer}</p>
-                  <p className="text-xs text-slate-400 truncate">{conv.lastMessage}</p>
+          <div className="flex items-end justify-between gap-3 h-56">
+            {usage.map((u, i) => (
+              <div key={u.day} className="flex-1 flex flex-col items-center gap-2">
+                <div className="w-full flex-1 flex items-end">
+                  <div
+                    className={`w-full border-4 border-black rounded-t-lg ${barColors[i]}`}
+                    style={{ height: `${u.value}%` }}
+                  />
                 </div>
-                <div className="flex items-center gap-3 flex-shrink-0">
-                  <StatusBadge status={conv.status} />
-                  <span className="text-xs text-slate-400 hidden sm:block">{conv.time}</span>
-                </div>
+                <span className="font-black text-xs uppercase">{u.day}</span>
               </div>
             ))}
           </div>
-        </Card>
-      </motion.div>
-    </motion.div>
+        </Panel>
+
+        <Panel className="p-6">
+          <h2 className="text-2xl font-black uppercase tracking-tight mb-6">
+            Quick Actions
+          </h2>
+          <div className="space-y-4">
+            {quickActions.map((a) => (
+              <Link
+                key={a.label}
+                href={a.href}
+                className={`group flex items-center gap-4 border-4 border-black rounded-xl p-4 ${a.color} shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all`}
+              >
+                <div className="border-2 border-black rounded-lg p-2 bg-white">
+                  <a.icon size={20} />
+                </div>
+                <div className="flex-1">
+                  <div className="font-black uppercase text-sm">{a.label}</div>
+                  <div className="text-xs font-bold opacity-70">{a.desc}</div>
+                </div>
+                <ArrowUpRight
+                  size={20}
+                  className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform"
+                />
+              </Link>
+            ))}
+          </div>
+        </Panel>
+      </div>
+
+      <Panel className="p-6">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-black uppercase tracking-tight">
+            Recent Conversations
+          </h2>
+          <Link
+            href="/dashboard/conversations"
+            className="font-black uppercase text-xs tracking-widest underline decoration-4 decoration-[#ccff00] underline-offset-4 hover:text-purple-600"
+          >
+            View All
+          </Link>
+        </div>
+        <Table head={["Customer", "Last Message", "Time", "Status"]}>
+          {recent.map((r, i) => (
+            <Tr key={i}>
+              <Td>
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-black rounded-full" />
+                  {r.name}
+                </div>
+              </Td>
+              <Td className="text-black/70">{r.msg}</Td>
+              <Td className="whitespace-nowrap text-black/50">{r.time}</Td>
+              <Td>
+                <Badge color={r.color}>{r.status}</Badge>
+              </Td>
+            </Tr>
+          ))}
+        </Table>
+      </Panel>
+    </div>
   );
 }
