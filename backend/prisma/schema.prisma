@@ -10,15 +10,8 @@ datasource db {
   extensions = [vector]
 }
 
-enum UserRole {
-  SUPER_ADMIN
-  USER
-}
-
 enum CompanyRole {
   OWNER
-  ADMIN
-  MEMBER
 }
 
 enum ChatbotStatus {
@@ -56,7 +49,6 @@ model User {
   fullName  String
   email     String   @unique
   password  String
-  role      UserRole @default(USER)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -85,7 +77,7 @@ model CompanyMember {
   id        String      @id @default(uuid())
   userId    String
   companyId String
-  role      CompanyRole @default(MEMBER)
+  role      CompanyRole @default(OWNER)
   createdAt DateTime    @default(now())
 
   user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)

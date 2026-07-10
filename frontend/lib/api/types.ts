@@ -8,7 +8,6 @@ export type User = {
   id: string;
   fullName: string;
   email: string;
-  role: string;
   createdAt: string;
   updatedAt: string;
 };
@@ -23,7 +22,7 @@ export type Company = {
   updatedAt: string;
 };
 
-export type CompanyRole = "OWNER" | "ADMIN" | "MEMBER";
+export type CompanyRole = "OWNER";
 
 export type ChatbotStatus = "ACTIVE" | "INACTIVE";
 

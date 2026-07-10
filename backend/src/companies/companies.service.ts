@@ -26,10 +26,7 @@ export class CompaniesService {
   }
 
   async updateMyCompany(user: JwtPayload, dto: UpdateCompanyDto) {
-    if (
-      user.companyRole !== CompanyRole.OWNER &&
-      user.companyRole !== CompanyRole.ADMIN
-    ) {
+    if (user.companyRole !== CompanyRole.OWNER) {
       throw new ForbiddenException('Insufficient permissions');
     }
 
