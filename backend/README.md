@@ -1,98 +1,174 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Assist IQ Backend API
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+Production-style NestJS backend for the Assist IQ AI customer support SaaS platform.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Tech Stack
 
-## Description
+- NestJS + TypeScript
+- Supabase PostgreSQL (with pgvector)
+- Supabase Storage
+- Prisma ORM
+- JWT authentication (custom, not Supabase Auth)
+- OpenRouter (OpenAI-compatible SDK) for embeddings + chat
+- Swagger docs at `/api/docs`
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## Setup
 
-## Project setup
+### 1. Environment variables
+
+Copy the example env file and fill in your values:
 
 ```bash
-$ npm install
+cp .env.example .env
 ```
 
-## Compile and run the project
+Required variables:
+
+- `DATABASE_URL` — Supabase pooled PostgreSQL connection string
+- `DIRECT_URL` — Supabase direct connection string (for migrations)
+- `JWT_SECRET` — strong random secret
+- `SUPABASE_URL` — your Supabase project URL
+- `SUPABASE_SERVICE_ROLE_KEY` — service role key (backend only)
+- `OPENROUTER_API_KEY` — OpenRouter API key
+- `OPENROUTER_BASE_URL` — optional, defaults to `https://openrouter.ai/api/v1`
+- `OPENROUTER_CHAT_MODEL` — optional, defaults to `openai/gpt-4o-mini`
+- `OPENROUTER_EMBEDDING_MODEL` — optional, defaults to `openai/text-embedding-3-small`
+
+### 2. Enable pgvector in Supabase
+
+In the Supabase SQL editor, run:
+
+```sql
+CREATE EXTENSION IF NOT EXISTS vector;
+```
+
+### 3. Install dependencies
 
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+npm install
 ```
 
-## Run tests
+### 4. Run migrations
 
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+npm run prisma:generate
+npm run prisma:migrate
 ```
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+### 5. Seed demo data (optional)
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+npm run seed
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+Demo credentials:
 
-## Resources
+- Email: `demo@assistiq.com`
+- Password: `password123`
 
-Check out a few resources that may come in handy when working with NestJS:
+### 6. Start the API
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+```bash
+npm run start:dev
+```
 
-## Support
+API runs on `http://localhost:4000` by default.
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+Swagger docs: `http://localhost:4000/api/docs`
 
-## Stay in touch
+## Scripts
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+| Script | Description |
+|--------|-------------|
+| `npm run start:dev` | Start in watch mode |
+| `npm run build` | Compile TypeScript |
+| `npm run prisma:generate` | Generate Prisma client |
+| `npm run prisma:migrate` | Apply migrations |
+| `npm run prisma:studio` | Open Prisma Studio |
+| `npm run seed` | Seed demo data |
 
-## License
+## API Overview
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+### Auth
+- `POST /auth/register` — register user + company + default chatbot
+- `POST /auth/login` — login
+- `GET /auth/me` — current user (JWT required)
+
+### Company
+- `GET /companies/me`
+- `PATCH /companies/me`
+
+### Chatbots
+- `GET /chatbots`
+- `GET /chatbots/:id`
+- `PATCH /chatbots/:id`
+- `PATCH /chatbots/:id/status`
+
+### Documents
+- `POST /documents/upload` — multipart file upload (PDF, TXT, DOCX)
+- `GET /documents`
+- `GET /documents/:id`
+- `DELETE /documents/:id`
+- `POST /documents/:id/process` — extract text, chunk, embed
+
+### Conversations (dashboard)
+- `POST /conversations/start`
+- `POST /conversations/:id/messages`
+- `GET /conversations`
+- `GET /conversations/:id`
+- `PATCH /conversations/:id/status`
+
+### Public widget APIs (no auth)
+- `GET /public/chatbots/:chatbotId`
+- `POST /public/chatbots/:chatbotId/conversations`
+- `POST /public/conversations/:conversationId/messages`
+
+### Analytics
+- `GET /analytics/overview`
+- `GET /analytics/conversations`
+- `GET /analytics/top-questions`
+
+## Architecture
+
+```
+src/
+├── auth/           JWT auth, register/login
+├── companies/      Company profile
+├── chatbots/       Chatbot settings
+├── documents/      Upload + processing pipeline
+├── embeddings/     OpenRouter embeddings
+├── rag/            Vector search + LLM answers
+├── conversations/  Chat + public widget endpoints
+├── analytics/      Usage metrics
+├── supabase/       Storage client (service role)
+├── prisma/         Database access
+└── common/         Shared utilities, filters, interceptors
+```
+
+## Document processing flow
+
+1. Upload file → Supabase Storage (`assist-iq-documents` bucket)
+2. Call `POST /documents/:id/process`
+3. Text extracted (PDF/TXT/DOCX)
+4. Text split into ~900 char chunks with 150 char overlap
+5. Embeddings created via OpenRouter
+6. Chunks stored in PostgreSQL with pgvector
+7. RAG queries use cosine similarity to find top 5 chunks
+
+## Response format
+
+```json
+{
+  "success": true,
+  "message": "Document uploaded successfully",
+  "data": {}
+}
+```
+
+## Security notes
+
+- Passwords hashed with bcrypt
+- JWT required for all dashboard endpoints
+- Company-scoped data access enforced on every query
+- Supabase service role key used only on backend
+- Public APIs only expose active chatbot widget data

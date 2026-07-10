@@ -1,0 +1,197 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  directUrl  = env("DIRECT_URL")
+  extensions = [vector]
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  USER
+}
+
+enum CompanyRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+enum ChatbotStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum DocumentStatus {
+  UPLOADED
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum MessageRole {
+  USER
+  ASSISTANT
+  SYSTEM
+}
+
+enum ConversationStatus {
+  OPEN
+  RESOLVED
+  WAITING
+}
+
+enum UsageType {
+  MESSAGE
+  DOCUMENT_UPLOAD
+  EMBEDDING
+}
+
+model User {
+  id        String   @id @default(uuid())
+  fullName  String
+  email     String   @unique
+  password  String
+  role      UserRole @default(USER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  memberships CompanyMember[]
+  documents   Document[]
+}
+
+model Company {
+  id        String   @id @default(uuid())
+  name      String
+  slug      String   @unique
+  website   String?
+  industry  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  members       CompanyMember[]
+  chatbots      Chatbot[]
+  documents     Document[]
+  chunks        DocumentChunk[]
+  conversations Conversation[]
+  usageLogs     UsageLog[]
+}
+
+model CompanyMember {
+  id        String      @id @default(uuid())
+  userId    String
+  companyId String
+  role      CompanyRole @default(MEMBER)
+  createdAt DateTime    @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, companyId])
+  @@index([companyId])
+}
+
+model Chatbot {
+  id             String        @id @default(uuid())
+  companyId      String
+  name           String
+  welcomeMessage String        @default("Hi! How can I help you today?")
+  tone           String        @default("professional")
+  primaryColor   String        @default("#3B82F6")
+  status         ChatbotStatus @default(ACTIVE)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  company       Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  conversations Conversation[]
+
+  @@index([companyId])
+}
+
+model Document {
+  id            String         @id @default(uuid())
+  companyId     String
+  uploadedById  String
+  fileName      String
+  originalName  String
+  fileType      String
+  fileSize      Int
+  storageBucket String
+  storagePath   String
+  publicUrl     String?
+  status        DocumentStatus @default(UPLOADED)
+  extractedText String?        @db.Text
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  company    Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  uploadedBy User            @relation(fields: [uploadedById], references: [id], onDelete: Cascade)
+  chunks     DocumentChunk[]
+
+  @@index([companyId])
+}
+
+model DocumentChunk {
+  id         String                      @id @default(uuid())
+  documentId String
+  companyId  String
+  content    String                      @db.Text
+  embedding  Unsupported("vector(1536)")?
+  metadata   Json?
+  createdAt  DateTime                    @default(now())
+
+  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  company  Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([documentId])
+  @@index([companyId])
+}
+
+model Conversation {
+  id           String             @id @default(uuid())
+  chatbotId    String
+  companyId    String
+  visitorName  String?
+  visitorEmail String?
+  status       ConversationStatus @default(OPEN)
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+
+  chatbot  Chatbot   @relation(fields: [chatbotId], references: [id], onDelete: Cascade)
+  company  Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  messages Message[]
+
+  @@index([companyId])
+  @@index([chatbotId])
+}
+
+model Message {
+  id             String      @id @default(uuid())
+  conversationId String
+  role           MessageRole
+  content        String      @db.Text
+  sources        Json?
+  createdAt      DateTime    @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId])
+}
+
+model UsageLog {
+  id        String    @id @default(uuid())
+  companyId String
+  type      UsageType
+  count     Int       @default(1)
+  metadata  Json?
+  createdAt DateTime  @default(now())
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([companyId])
+  @@index([companyId, type, createdAt])
+}
