@@ -55,18 +55,7 @@ npm run prisma:generate
 npm run prisma:migrate
 ```
 
-### 5. Seed demo data (optional)
-
-```bash
-npm run seed
-```
-
-Demo credentials:
-
-- Email: `demo@assistiq.com`
-- Password: `password123`
-
-### 6. Start the API
+### 5. Start the API
 
 ```bash
 npm run start:dev
@@ -85,7 +74,6 @@ Swagger docs: `http://localhost:4000/api/docs`
 | `npm run prisma:generate` | Generate Prisma client |
 | `npm run prisma:migrate` | Apply migrations |
 | `npm run prisma:studio` | Open Prisma Studio |
-| `npm run seed` | Seed demo data |
 
 ## API Overview
 

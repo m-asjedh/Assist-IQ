@@ -1,12 +1,15 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { User, Building2, Bell, Palette, Shield } from "lucide-react";
 import { NeoButton } from "@/src/components/landingpage/Brutalism";
 import {
   Panel,
   SectionHeader,
 } from "@/src/components/dashboard/primitives";
+import { api } from "@/lib/api";
+import { useAuth } from "@/src/context/AuthProvider";
+import { ApiError } from "@/lib/api/client";
 
 const tabs = [
   { id: "profile", label: "Profile", icon: User },
@@ -18,12 +21,16 @@ const tabs = [
 
 function Field({
   label,
-  defaultValue,
+  value,
+  onChange,
   type = "text",
+  disabled = false,
 }: {
   label: string;
-  defaultValue?: string;
+  value: string;
+  onChange?: (v: string) => void;
   type?: string;
+  disabled?: boolean;
 }) {
   return (
     <label className="block">
@@ -32,8 +39,10 @@ function Field({
       </span>
       <input
         type={type}
-        defaultValue={defaultValue}
-        className="w-full border-4 border-black rounded-xl px-4 py-3 font-bold outline-none"
+        value={value}
+        disabled={disabled}
+        onChange={(e) => onChange?.(e.target.value)}
+        className="w-full border-4 border-black rounded-xl px-4 py-3 font-bold outline-none disabled:bg-neutral-100"
       />
     </label>
   );
@@ -58,7 +67,70 @@ function Toggle({ label, on = false }: { label: string; on?: boolean }) {
 }
 
 export default function SettingsPage() {
+  const { user, company, refresh } = useAuth();
   const [tab, setTab] = useState("profile");
+  const [companyName, setCompanyName] = useState("");
+  const [website, setWebsite] = useState("");
+  const [industry, setIndustry] = useState("");
+  const [botName, setBotName] = useState("");
+  const [accentColor, setAccentColor] = useState("#ccff00");
+  const [chatbotId, setChatbotId] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
+
+  useEffect(() => {
+    setCompanyName(company?.name ?? "");
+    setWebsite(company?.website ?? "");
+    setIndustry(company?.industry ?? "");
+  }, [company]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const bots = await api.listChatbots();
+        if (cancelled || !bots[0]) return;
+        setChatbotId(bots[0].id);
+        setBotName(bots[0].name);
+        setAccentColor(bots[0].primaryColor);
+      } catch {
+        /* optional */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const save = async () => {
+    setSaving(true);
+    setError("");
+    setMessage("");
+    try {
+      if (tab === "company") {
+        await api.updateCompany({
+          name: companyName,
+          website: website || undefined,
+          industry: industry || undefined,
+        });
+        await refresh();
+        setMessage("Company updated.");
+      } else if (tab === "branding" && chatbotId) {
+        await api.updateChatbot(chatbotId, {
+          name: botName,
+          primaryColor: accentColor,
+        });
+        setMessage("Branding updated.");
+      } else {
+        setMessage("Nothing to save on this tab yet.");
+      }
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Save failed");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <div className="max-w-6xl mx-auto">
@@ -66,11 +138,26 @@ export default function SettingsPage() {
         title="Settings"
         subtitle="Manage your account and preferences."
         action={
-          <NeoButton variant="lime" className="text-sm">
-            Save Changes
+          <NeoButton
+            variant="lime"
+            className="text-sm"
+            disabled={saving}
+            onClick={() => void save()}
+          >
+            {saving ? "Saving..." : "Save Changes"}
           </NeoButton>
         }
       />
+
+      {(error || message) && (
+        <div
+          className={`mb-6 border-4 border-black rounded-xl px-4 py-3 font-bold ${
+            error ? "bg-orange-200" : "bg-[#ccff00]"
+          }`}
+        >
+          {error || message}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         <Panel className="p-4 h-fit">
@@ -100,14 +187,24 @@ export default function SettingsPage() {
               </h2>
               <div className="flex items-center gap-4">
                 <div className="w-16 h-16 bg-purple-400 border-4 border-black rounded-full" />
-                <NeoButton variant="white" className="text-xs">
-                  Change Avatar
-                </NeoButton>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <Field label="Full Name" defaultValue="Jane Doe" />
-                <Field label="Email" defaultValue="jane@company.com" type="email" />
+                <Field
+                  label="Full Name"
+                  value={user?.fullName ?? ""}
+                  disabled
+                />
+                <Field
+                  label="Email"
+                  value={user?.email ?? ""}
+                  type="email"
+                  disabled
+                />
               </div>
+              <p className="text-sm font-bold text-black/50">
+                Profile fields are managed by your account and can&apos;t be
+                edited here yet.
+              </p>
             </div>
           )}
 
@@ -117,10 +214,26 @@ export default function SettingsPage() {
                 Company
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <Field label="Company Name" defaultValue="Acme Inc." />
-                <Field label="Website" defaultValue="www.acme.com" />
-                <Field label="Industry" defaultValue="SaaS" />
-                <Field label="Team Size" defaultValue="11-50" />
+                <Field
+                  label="Company Name"
+                  value={companyName}
+                  onChange={setCompanyName}
+                />
+                <Field
+                  label="Website"
+                  value={website}
+                  onChange={setWebsite}
+                />
+                <Field
+                  label="Industry"
+                  value={industry}
+                  onChange={setIndustry}
+                />
+                <Field
+                  label="Slug"
+                  value={company?.slug ?? ""}
+                  disabled
+                />
               </div>
             </div>
           )}
@@ -136,6 +249,9 @@ export default function SettingsPage() {
                 <Toggle label="Escalation Alerts" on />
                 <Toggle label="Product Updates" />
               </div>
+              <p className="text-sm font-bold text-black/50">
+                Notification preferences are UI-only for now.
+              </p>
             </div>
           )}
 
@@ -145,8 +261,16 @@ export default function SettingsPage() {
                 Chatbot Branding
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <Field label="Bot Display Name" defaultValue="Assist Bot" />
-                <Field label="Accent Color" defaultValue="#ccff00" />
+                <Field
+                  label="Bot Display Name"
+                  value={botName}
+                  onChange={setBotName}
+                />
+                <Field
+                  label="Accent Color"
+                  value={accentColor}
+                  onChange={setAccentColor}
+                />
               </div>
               <Toggle label="Show 'Powered by Assist IQ'" on />
             </div>
@@ -157,12 +281,9 @@ export default function SettingsPage() {
               <h2 className="text-2xl font-black uppercase tracking-tight">
                 Security
               </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <Field label="Current Password" type="password" defaultValue="********" />
-                <div className="hidden sm:block" />
-                <Field label="New Password" type="password" />
-                <Field label="Confirm Password" type="password" />
-              </div>
+              <p className="font-bold text-black/50">
+                Password change isn&apos;t available via API yet.
+              </p>
               <Toggle label="Two-Factor Authentication" />
             </div>
           )}

@@ -75,12 +75,16 @@ export function NeoButton({
   className = "",
   href,
   type = "button",
+  onClick,
+  disabled = false,
 }: {
   children: React.ReactNode;
   variant?: string;
   className?: string;
   href?: string;
   type?: "button" | "submit" | "reset";
+  onClick?: () => void;
+  disabled?: boolean;
 }) {
   const bg =
     variant === "lime"
@@ -95,6 +99,7 @@ export function NeoButton({
       relative px-8 py-3 font-bold uppercase tracking-wider border-4 border-black rounded-full 
       shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] 
       transition-all duration-200 ${bg} ${className} flex items-center gap-2
+      ${disabled ? "opacity-50 pointer-events-none" : ""}
     `;
 
   if (href) {
@@ -106,7 +111,7 @@ export function NeoButton({
   }
 
   return (
-    <button type={type} className={classes}>
+    <button type={type} className={classes} onClick={onClick} disabled={disabled}>
       {children}
     </button>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   MessagesSquare,
@@ -21,15 +21,34 @@ import {
   Td,
   Badge,
 } from "@/src/components/dashboard/primitives";
+import { api } from "@/lib/api";
+import type { AnalyticsOverview, Conversation } from "@/lib/api/types";
+import { formatRelativeTime, statusBadgeColor } from "@/lib/format";
+import { useAuth } from "@/src/context/AuthProvider";
+import { ApiError } from "@/lib/api/client";
 
-const usage = [
-  { day: "Mon", value: 62 },
-  { day: "Tue", value: 78 },
-  { day: "Wed", value: 45 },
-  { day: "Thu", value: 90 },
-  { day: "Fri", value: 70 },
-  { day: "Sat", value: 38 },
-  { day: "Sun", value: 55 },
+const quickActions = [
+  {
+    label: "Upload Docs",
+    desc: "Add to knowledge base",
+    href: "/dashboard/knowledge-base",
+    icon: Upload,
+    color: "bg-purple-400",
+  },
+  {
+    label: "Test Chatbot",
+    desc: "Open the playground",
+    href: "/dashboard/chatbot",
+    icon: Bot,
+    color: "bg-[#ccff00]",
+  },
+  {
+    label: "Get Widget",
+    desc: "Install on your site",
+    href: "/dashboard/widget-setup",
+    icon: Code2,
+    color: "bg-orange-400",
+  },
 ];
 
 const barColors = [
@@ -42,32 +61,111 @@ const barColors = [
   "bg-blue-400",
 ];
 
-const recent = [
-  { name: "Sarah Malik", msg: "How do I request a refund?", time: "2m ago", status: "Resolved", color: "green" },
-  { name: "David Chen", msg: "Widget not loading on Safari", time: "18m ago", status: "Open", color: "orange" },
-  { name: "Amara Okoye", msg: "Can I export my chat history?", time: "1h ago", status: "Waiting", color: "blue" },
-  { name: "Liam Wright", msg: "Pricing for 5 seats?", time: "3h ago", status: "Resolved", color: "green" },
-];
-
-const quickActions = [
-  { label: "Upload Docs", desc: "Add to knowledge base", href: "/dashboard/knowledge-base", icon: Upload, color: "bg-purple-400" },
-  { label: "Test Chatbot", desc: "Open the playground", href: "/dashboard/chatbot", icon: Bot, color: "bg-[#ccff00]" },
-  { label: "Get Widget", desc: "Install on your site", href: "/dashboard/widget-setup", icon: Code2, color: "bg-orange-400" },
-];
-
 export default function DashboardPage() {
+  const { user } = useAuth();
+  const [overview, setOverview] = useState<AnalyticsOverview | null>(null);
+  const [recent, setRecent] = useState<Conversation[]>([]);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const [ov, convos] = await Promise.all([
+          api.analyticsOverview(),
+          api.listConversations(),
+        ]);
+        if (cancelled) return;
+        setOverview(ov);
+        setRecent(convos.slice(0, 5));
+      } catch (err) {
+        if (!cancelled) {
+          setError(
+            err instanceof ApiError ? err.message : "Failed to load dashboard",
+          );
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const chatbotLive = overview?.chatbotStatus.some((c) => c.status === "ACTIVE");
+  const messageUsage =
+    overview?.monthlyUsage.find((u) => u.type === "MESSAGE")?.count ?? 0;
+
+  const volumeBars = useMemo(() => {
+    const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const counts = Array(7).fill(0) as number[];
+
+    for (const c of recent) {
+      const day = new Date(c.createdAt).getDay();
+      counts[day] += 1;
+    }
+
+    // Prefer analytics conversations if we only have recent slice — still show shape
+    const max = Math.max(...counts, 1);
+    return days.map((day, i) => ({
+      day,
+      value: Math.round((counts[i] / max) * 100) || 8,
+    }));
+  }, [recent]);
+
+  if (loading) {
+    return (
+      <div className="max-w-7xl mx-auto font-black uppercase tracking-widest">
+        Loading dashboard...
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-7xl mx-auto">
       <SectionHeader
         title="Dashboard"
-        subtitle="Welcome back, Jane. Here's what's happening."
+        subtitle={`Welcome back, ${user?.fullName?.split(" ")[0] ?? "there"}. Here's what's happening.`}
       />
 
+      {error && (
+        <div className="mb-6 border-4 border-black rounded-xl bg-orange-200 px-4 py-3 font-bold">
+          {error}
+        </div>
+      )}
+
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 mb-10">
-        <StatCard label="Total Conversations" value="12,480" delta="+8.2% this week" icon={MessagesSquare} />
-        <StatCard label="Documents Uploaded" value="34" delta="4 added today" icon={FileText} color="bg-purple-400" />
-        <StatCard label="Chatbot Status" value="Live" delta="99.9% uptime" icon={Activity} color="bg-[#ccff00]" />
-        <StatCard label="Monthly Usage" value="8,240" delta="of 10,000 msgs" icon={Gauge} color="bg-orange-400" />
+        <StatCard
+          label="Total Conversations"
+          value={String(overview?.totalConversations ?? 0)}
+          delta={`${overview?.totalMessages ?? 0} messages`}
+          icon={MessagesSquare}
+        />
+        <StatCard
+          label="Documents Uploaded"
+          value={String(overview?.totalDocuments ?? 0)}
+          delta={`${overview?.totalDocumentChunks ?? 0} chunks`}
+          icon={FileText}
+          color="bg-purple-400"
+        />
+        <StatCard
+          label="Chatbot Status"
+          value={chatbotLive ? "Live" : "Offline"}
+          delta={`${overview?.chatbotStatus.length ?? 0} bot(s)`}
+          icon={Activity}
+          color="bg-[#ccff00]"
+        />
+        <StatCard
+          label="Monthly Usage"
+          value={String(messageUsage)}
+          delta="messages this month"
+          icon={Gauge}
+          color="bg-orange-400"
+        />
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-10">
@@ -76,10 +174,10 @@ export default function DashboardPage() {
             <h2 className="text-2xl font-black uppercase tracking-tight">
               Conversation Volume
             </h2>
-            <Badge color="green">Last 7 Days</Badge>
+            <Badge color="green">Recent</Badge>
           </div>
           <div className="flex items-end justify-between gap-3 h-56">
-            {usage.map((u, i) => (
+            {volumeBars.map((u, i) => (
               <div key={u.day} className="flex-1 flex flex-col items-center gap-2">
                 <div className="w-full flex-1 flex items-end">
                   <div
@@ -133,23 +231,34 @@ export default function DashboardPage() {
             View All
           </Link>
         </div>
-        <Table head={["Customer", "Last Message", "Time", "Status"]}>
-          {recent.map((r, i) => (
-            <Tr key={i}>
-              <Td>
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-black rounded-full" />
-                  {r.name}
-                </div>
-              </Td>
-              <Td className="text-black/70">{r.msg}</Td>
-              <Td className="whitespace-nowrap text-black/50">{r.time}</Td>
-              <Td>
-                <Badge color={r.color}>{r.status}</Badge>
-              </Td>
-            </Tr>
-          ))}
-        </Table>
+        {recent.length === 0 ? (
+          <p className="font-bold text-black/50">No conversations yet.</p>
+        ) : (
+          <Table head={["Customer", "Last Message", "Time", "Status"]}>
+            {recent.map((r) => {
+              const last = r.messages?.[0];
+              return (
+                <Tr key={r.id}>
+                  <Td>
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-black rounded-full" />
+                      {r.visitorName || "Anonymous"}
+                    </div>
+                  </Td>
+                  <Td className="text-black/70">
+                    {last?.content?.slice(0, 60) || "—"}
+                  </Td>
+                  <Td className="whitespace-nowrap text-black/50">
+                    {formatRelativeTime(r.updatedAt)}
+                  </Td>
+                  <Td>
+                    <Badge color={statusBadgeColor(r.status)}>{r.status}</Badge>
+                  </Td>
+                </Tr>
+              );
+            })}
+          </Table>
+        )}
       </Panel>
     </div>
   );

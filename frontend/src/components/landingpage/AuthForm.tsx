@@ -4,7 +4,9 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowUpRight, Star } from "lucide-react";
-import { GlobalStyles, NeoButton, NeoCard, FloatingCube} from "./Brutalism";
+import { GlobalStyles, NeoButton, NeoCard, FloatingCube } from "./Brutalism";
+import { useAuth } from "@/src/context/AuthProvider";
+import { ApiError } from "@/lib/api/client";
 
 type AuthMode = "login" | "signup";
 
@@ -14,12 +16,14 @@ const BrutalInput = ({
   placeholder,
   value,
   onChange,
+  required = true,
 }: {
   label: string;
   type: string;
   placeholder: string;
   value: string;
   onChange: (v: string) => void;
+  required?: boolean;
 }) => (
   <label className="block">
     <span className="block mb-2 font-black uppercase text-sm tracking-widest">
@@ -30,6 +34,7 @@ const BrutalInput = ({
       placeholder={placeholder}
       value={value}
       onChange={(e) => onChange(e.target.value)}
+      required={required}
       className="w-full bg-white border-4 border-black rounded-xl px-5 py-4 font-bold text-lg outline-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] focus:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] focus:-translate-x-[2px] focus:-translate-y-[2px] transition-all placeholder:text-black/30"
     />
   </label>
@@ -38,16 +43,36 @@ const BrutalInput = ({
 export function AuthForm({ mode }: { mode: AuthMode }) {
   const isLogin = mode === "login";
   const router = useRouter();
+  const { login, register } = useAuth();
 
-  const [name, setName] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [companyName, setCompanyName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: wire up to your auth backend
-    console.log({ mode, name, email, password });
-    router.push("/dashboard");
+    setError("");
+    setLoading(true);
+
+    try {
+      if (isLogin) {
+        await login(email, password);
+      } else {
+        await register({ fullName, companyName, email, password });
+      }
+      router.push("/dashboard");
+    } catch (err) {
+      setError(
+        err instanceof ApiError
+          ? err.message
+          : "Something went wrong. Please try again.",
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -98,13 +123,22 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
 
             <form onSubmit={handleSubmit} className="space-y-6">
               {!isLogin && (
-                <BrutalInput
-                  label="Name"
-                  type="text"
-                  placeholder="Jane Doe"
-                  value={name}
-                  onChange={setName}
-                />
+                <>
+                  <BrutalInput
+                    label="Full Name"
+                    type="text"
+                    placeholder="Jane Doe"
+                    value={fullName}
+                    onChange={setFullName}
+                  />
+                  <BrutalInput
+                    label="Company Name"
+                    type="text"
+                    placeholder="Acme Corp"
+                    value={companyName}
+                    onChange={setCompanyName}
+                  />
+                </>
               )}
               <BrutalInput
                 label="Email"
@@ -121,13 +155,26 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
                 onChange={setPassword}
               />
 
+              {error && (
+                <div className="border-4 border-black rounded-xl bg-orange-200 px-4 py-3 font-bold text-sm">
+                  {error}
+                </div>
+              )}
+
               <NeoButton
                 type="submit"
                 variant={isLogin ? "purple" : "lime"}
                 className="w-full justify-center text-lg py-4 group"
+                disabled={loading}
               >
-                {isLogin ? "Log In" : "Create Account"}
-                <ArrowUpRight className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                {loading
+                  ? "Please wait..."
+                  : isLogin
+                    ? "Log In"
+                    : "Create Account"}
+                {!loading && (
+                  <ArrowUpRight className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                )}
               </NeoButton>
             </form>
           </NeoCard>

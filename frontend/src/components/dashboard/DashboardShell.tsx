@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
   BookOpen,
@@ -21,6 +21,8 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { GlobalStyles } from "../landingpage/Brutalism";
+import { useAuth } from "@/src/context/AuthProvider";
+import { initials } from "@/lib/format";
 
 type NavItem = { label: string; href: string; icon: LucideIcon };
 
@@ -34,13 +36,19 @@ const NAV: NavItem[] = [
   { label: "Settings", href: "/dashboard/settings", icon: Settings },
 ];
 
-function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
+function SidebarContent({
+  onNavigate,
+  onLogout,
+}: {
+  onNavigate?: () => void;
+  onLogout: () => void;
+}) {
   const pathname = usePathname();
 
   return (
     <div className="flex h-full flex-col">
       <Link
-        href="/"
+        href="/dashboard"
         className="flex items-center gap-2 px-6 py-6 border-b-4 border-black"
       >
         <img
@@ -76,13 +84,13 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
       </nav>
 
       <div className="p-4 border-t-4 border-black">
-        <Link
-          href="/"
-          className="flex items-center gap-3 px-4 py-3 rounded-xl border-4 border-transparent hover:border-black hover:bg-neutral-100 font-black uppercase text-sm tracking-wide transition-all"
+        <button
+          onClick={onLogout}
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border-4 border-transparent hover:border-black hover:bg-neutral-100 font-black uppercase text-sm tracking-wide transition-all"
         >
           <LogOut size={18} strokeWidth={2.5} />
           Log Out
-        </Link>
+        </button>
       </div>
     </div>
   );
@@ -91,17 +99,28 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
 export function DashboardShell({ children }: { children: React.ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const { user, logout } = useAuth();
+  const router = useRouter();
+
+  const displayName = user?.fullName ?? "User";
+  const shortName =
+    displayName.split(" ").filter(Boolean).length > 1
+      ? `${displayName.split(" ")[0]} ${displayName.split(" ").at(-1)?.[0]}.`
+      : displayName;
+
+  const handleLogout = () => {
+    logout();
+    router.push("/login");
+  };
 
   return (
     <>
       <GlobalStyles />
       <div className="min-h-screen bg-[#f3f4f6]">
-        {/* Desktop sidebar */}
         <aside className="hidden lg:block fixed inset-y-0 left-0 w-72 bg-white border-r-4 border-black z-40">
-          <SidebarContent />
+          <SidebarContent onLogout={handleLogout} />
         </aside>
 
-        {/* Mobile sidebar */}
         {mobileOpen && (
           <div className="lg:hidden fixed inset-0 z-50 flex">
             <div className="w-72 bg-white border-r-4 border-black">
@@ -114,7 +133,10 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                   <X size={20} />
                 </button>
               </div>
-              <SidebarContent onNavigate={() => setMobileOpen(false)} />
+              <SidebarContent
+                onNavigate={() => setMobileOpen(false)}
+                onLogout={handleLogout}
+              />
             </div>
             <div
               className="flex-1 bg-black/40"
@@ -124,7 +146,6 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         )}
 
         <div className="lg:pl-72">
-          {/* Topbar */}
           <header className="sticky top-0 z-30 bg-white border-b-4 border-black">
             <div className="flex items-center gap-4 px-6 py-4">
               <button
@@ -149,7 +170,6 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                   aria-label="Notifications"
                 >
                   <Bell size={18} />
-                  <span className="absolute -top-1 -right-1 w-3 h-3 bg-orange-400 border-2 border-black rounded-full" />
                 </button>
 
                 <div className="relative">
@@ -157,9 +177,11 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                     onClick={() => setProfileOpen((v) => !v)}
                     className="flex items-center gap-2 border-4 border-black rounded-full pl-1 pr-3 py-1 bg-white shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
                   >
-                    <div className="w-8 h-8 bg-purple-400 border-2 border-black rounded-full" />
+                    <div className="w-8 h-8 bg-purple-400 border-2 border-black rounded-full flex items-center justify-center text-[10px] font-black">
+                      {initials(displayName)}
+                    </div>
                     <span className="hidden sm:block font-black uppercase text-xs tracking-wide">
-                      Jane D.
+                      {shortName}
                     </span>
                     <ChevronDown size={16} />
                   </button>
@@ -167,9 +189,9 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                   {profileOpen && (
                     <div className="absolute right-0 mt-3 w-52 bg-white border-4 border-black rounded-2xl shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] p-2 z-50">
                       <div className="px-3 py-2 border-b-2 border-black/10 mb-1">
-                        <div className="font-black text-sm">Jane Doe</div>
+                        <div className="font-black text-sm">{displayName}</div>
                         <div className="text-xs font-bold text-black/50">
-                          jane@company.com
+                          {user?.email}
                         </div>
                       </div>
                       <Link
@@ -186,12 +208,12 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                       >
                         <Settings size={16} /> Settings
                       </Link>
-                      <Link
-                        href="/"
-                        className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-orange-100 font-bold text-sm"
+                      <button
+                        onClick={handleLogout}
+                        className="w-full flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-orange-100 font-bold text-sm"
                       >
                         <LogOut size={16} /> Log Out
-                      </Link>
+                      </button>
                     </div>
                   )}
                 </div>
