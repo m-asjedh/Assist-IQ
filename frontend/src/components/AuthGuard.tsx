@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/src/context/AuthProvider";
+import { PageLoader } from "@/src/components/PageLoader";
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, loading } = useAuth();
@@ -15,11 +16,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   }, [loading, isAuthenticated, router]);
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#f3f4f6] font-black uppercase tracking-widest">
-        Loading...
-      </div>
-    );
+    return <PageLoader label="Getting things ready" />;
   }
 
   if (!isAuthenticated) return null;

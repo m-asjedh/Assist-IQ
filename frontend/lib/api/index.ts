@@ -9,7 +9,6 @@ import type {
   ConversationStatus,
   Document,
   Message,
-  TopQuestion,
   User,
 } from "@/lib/api/types";
 
@@ -149,13 +148,5 @@ export const api = {
 
   analyticsOverview() {
     return apiRequest<AnalyticsOverview>("/analytics/overview");
-  },
-
-  analyticsConversations() {
-    return apiRequest<Conversation[]>("/analytics/conversations");
-  },
-
-  analyticsTopQuestions() {
-    return apiRequest<TopQuestion[]>("/analytics/top-questions");
   },
 };

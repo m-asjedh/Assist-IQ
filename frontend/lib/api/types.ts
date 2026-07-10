@@ -97,11 +97,6 @@ export type AnalyticsOverview = {
   monthlyUsage: { type: string; count: number }[];
 };
 
-export type TopQuestion = {
-  question: string;
-  count: number;
-};
-
 export type AuthSession = {
   token: string;
   user: User;

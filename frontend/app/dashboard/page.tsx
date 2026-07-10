@@ -26,6 +26,7 @@ import type { AnalyticsOverview, Conversation } from "@/lib/api/types";
 import { formatRelativeTime, statusBadgeColor } from "@/lib/format";
 import { useAuth } from "@/src/context/AuthProvider";
 import { ApiError } from "@/lib/api/client";
+import { InlineLoader } from "@/src/components/PageLoader";
 
 const quickActions = [
   {
@@ -118,11 +119,7 @@ export default function DashboardPage() {
   }, [recent]);
 
   if (loading) {
-    return (
-      <div className="max-w-7xl mx-auto font-black uppercase tracking-widest">
-        Loading dashboard...
-      </div>
-    );
+    return <InlineLoader label="Loading dashboard" />;
   }
 
   return (
@@ -234,16 +231,20 @@ export default function DashboardPage() {
         {recent.length === 0 ? (
           <p className="font-bold text-black/50">No conversations yet.</p>
         ) : (
-          <Table head={["Customer", "Last Message", "Time", "Status"]}>
+          <Table head={["Chat ID", "Last Message", "Time", "Status"]}>
             {recent.map((r) => {
               const last = r.messages?.[0];
+              const shortId = r.id.slice(0, 8);
               return (
                 <Tr key={r.id}>
                   <Td>
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-black rounded-full" />
-                      {r.visitorName || "Anonymous"}
-                    </div>
+                    <Link
+                      href="/dashboard/conversations"
+                      className="font-mono font-black text-sm hover:underline"
+                      title={r.id}
+                    >
+                      #{shortId}
+                    </Link>
                   </Td>
                   <Td className="text-black/70">
                     {last?.content?.slice(0, 60) || "—"}

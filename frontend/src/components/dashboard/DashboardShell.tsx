@@ -8,7 +8,6 @@ import {
   BookOpen,
   Bot,
   MessagesSquare,
-  BarChart3,
   Code2,
   Settings,
   Search,
@@ -31,7 +30,6 @@ const NAV: NavItem[] = [
   { label: "Knowledge Base", href: "/dashboard/knowledge-base", icon: BookOpen },
   { label: "Chatbot", href: "/dashboard/chatbot", icon: Bot },
   { label: "Conversations", href: "/dashboard/conversations", icon: MessagesSquare },
-  { label: "Analytics", href: "/dashboard/analytics", icon: BarChart3 },
   { label: "Widget Setup", href: "/dashboard/widget-setup", icon: Code2 },
   { label: "Settings", href: "/dashboard/settings", icon: Settings },
 ];

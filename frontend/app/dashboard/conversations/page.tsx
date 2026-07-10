@@ -13,6 +13,7 @@ import type { Conversation, ConversationStatus } from "@/lib/api/types";
 import { formatRelativeTime, statusBadgeColor } from "@/lib/format";
 import { ApiError } from "@/lib/api/client";
 import { NeoButton } from "@/src/components/landingpage/Brutalism";
+import { InlineLoader } from "@/src/components/PageLoader";
 
 const filters = ["All", "Resolved", "Open", "Waiting"] as const;
 
@@ -107,11 +108,7 @@ export default function ConversationsPage() {
   };
 
   if (loading) {
-    return (
-      <div className="max-w-7xl mx-auto font-black uppercase tracking-widest">
-        Loading conversations...
-      </div>
-    );
+    return <InlineLoader label="Loading conversations" />;
   }
 
   return (

@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowUpRight, Star } from "lucide-react";
+import { ArrowUpRight, Eye, EyeOff, Star } from "lucide-react";
 import { GlobalStyles, NeoButton, NeoCard, FloatingCube } from "./Brutalism";
 import { useAuth } from "@/src/context/AuthProvider";
 import { ApiError } from "@/lib/api/client";
@@ -39,6 +39,50 @@ const BrutalInput = ({
     />
   </label>
 );
+
+const PasswordInput = ({
+  label,
+  placeholder,
+  value,
+  onChange,
+}: {
+  label: string;
+  placeholder: string;
+  value: string;
+  onChange: (v: string) => void;
+}) => {
+  const [visible, setVisible] = useState(false);
+
+  return (
+    <label className="block">
+      <span className="block mb-2 font-black uppercase text-sm tracking-widest">
+        {label}
+      </span>
+      <div className="relative">
+        <input
+          type={visible ? "text" : "password"}
+          placeholder={placeholder}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          required
+          className="w-full bg-white border-4 border-black rounded-xl px-5 py-4 pr-14 font-bold text-lg outline-none shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] focus:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] focus:-translate-x-[2px] focus:-translate-y-[2px] transition-all placeholder:text-black/30"
+        />
+        <button
+          type="button"
+          onClick={() => setVisible((v) => !v)}
+          className="absolute right-4 top-1/2 -translate-y-1/2 p-1 hover:opacity-70 transition-opacity"
+          aria-label={visible ? "Hide password" : "Show password"}
+        >
+          {visible ? (
+            <EyeOff size={22} strokeWidth={2.5} />
+          ) : (
+            <Eye size={22} strokeWidth={2.5} />
+          )}
+        </button>
+      </div>
+    </label>
+  );
+};
 
 export function AuthForm({ mode }: { mode: AuthMode }) {
   const isLogin = mode === "login";
@@ -147,9 +191,8 @@ export function AuthForm({ mode }: { mode: AuthMode }) {
                 value={email}
                 onChange={setEmail}
               />
-              <BrutalInput
+              <PasswordInput
                 label="Password"
-                type="password"
                 placeholder="••••••••"
                 value={password}
                 onChange={setPassword}

@@ -13,6 +13,7 @@ import { api } from "@/lib/api";
 import type { Chatbot } from "@/lib/api/types";
 import { ApiError } from "@/lib/api/client";
 import { useAuth } from "@/src/context/AuthProvider";
+import { InlineLoader } from "@/src/components/PageLoader";
 
 type Msg = { from: "bot" | "user"; text: string };
 
@@ -136,11 +137,7 @@ export default function ChatbotPage() {
   };
 
   if (loading) {
-    return (
-      <div className="max-w-7xl mx-auto font-black uppercase tracking-widest">
-        Loading chatbot...
-      </div>
-    );
+    return <InlineLoader label="Loading chatbot" />;
   }
 
   return (
